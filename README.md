@@ -1,6 +1,6 @@
 # pi-delivery
 
-[![pi-delivery — for PI Agent](https://raw.githubusercontent.com/prjct-app/pi-local-extensions/main/pi-delivery/docs/cover-v2.png)](https://pi.dev)
+[![pi-delivery — for PI Agent](https://raw.githubusercontent.com/prjct-app/pi-delivery/main/docs/cover-v2.png)](https://pi.dev)
 
 Track acceptance criteria, evidence, reviews, and unresolved risks before completing a substantial Pi task. New edits make earlier evidence stale.
 
