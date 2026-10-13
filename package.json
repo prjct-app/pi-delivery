@@ -1,6 +1,6 @@
 {
   "name": "@prjct.app/pi-delivery",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Track delivery criteria, evidence, reviews, and risks before completing substantial Pi tasks.",
   "type": "module",
   "license": "MIT",
@@ -36,7 +36,7 @@
     "docs/cover-v2.png"
   ],
   "scripts": {
-    "test": "node --import tsx --test --test-concurrency=1 state.test.ts",
+    "test": "export PI_CODING_AGENT_DIR=\"$(mktemp -d)\" PRJCT_HOME=\"$(mktemp -d)\" && node --import tsx --test --test-concurrency=1 state.test.ts",
     "check:package": "npm pack --dry-run --ignore-scripts",
     "check": "tsc --noEmit",
     "build:pi": "node scripts/build-pi.mjs",

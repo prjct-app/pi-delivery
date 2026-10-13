@@ -365,41 +365,44 @@ export function noteMutation(state: DeliveryState, path?: string): DeliveryState
   };
 }
 
-function stripShellLiterals(command: string): string {
-  const output: string[] = [];
-  let heredocEnd: string | undefined;
-  for (const line of command.split("\n")) {
-    if (heredocEnd) {
-      if (line.trim() === heredocEnd) heredocEnd = undefined;
-      output.push("");
-      continue;
+// Blanks quoted text on one line, honouring escapes; quoted characters become spaces.
+function stripQuoted(line: string): string {
+  const scan = { cleaned: "", quote: undefined as "'" | '"' | "`" | undefined, escaped: false };
+  for (const char of line) {
+    if (scan.escaped) {
+      scan.cleaned += scan.quote ? " " : char;
+      scan.escaped = false;
+    } else if (char === "\\") {
+      scan.cleaned += scan.quote ? " " : char;
+      scan.escaped = true;
+    } else if (scan.quote) {
+      scan.cleaned += " ";
+      if (char === scan.quote) scan.quote = undefined;
+    } else if (char === "'" || char === '"' || char === "`") {
+      scan.quote = char;
+      scan.cleaned += " ";
+    } else {
+      scan.cleaned += char;
     }
-
-    let cleaned = "";
-    let quote: "'" | '"' | "`" | undefined;
-    let escaped = false;
-    for (const char of line) {
-      if (escaped) {
-        cleaned += quote ? " " : char;
-        escaped = false;
-      } else if (char === "\\") {
-        cleaned += quote ? " " : char;
-        escaped = true;
-      } else if (quote) {
-        cleaned += " ";
-        if (char === quote) quote = undefined;
-      } else if (char === "'" || char === '"' || char === "`") {
-        quote = char;
-        cleaned += " ";
-      } else {
-        cleaned += char;
-      }
-    }
-    output.push(cleaned);
-    const marker = line.match(/<<-?\s*['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?/);
-    if (marker) heredocEnd = marker[1];
   }
-  return output.join("\n");
+  return scan.cleaned;
+}
+
+function stripShellLiterals(command: string): string {
+  const scan = { heredocEnd: undefined as string | undefined };
+  return command
+    .split("\n")
+    .map((line) => {
+      if (scan.heredocEnd) {
+        if (line.trim() === scan.heredocEnd) scan.heredocEnd = undefined;
+        return "";
+      }
+      const cleaned = stripQuoted(line);
+      const marker = line.match(/<<-?\s*['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?/);
+      if (marker) scan.heredocEnd = marker[1];
+      return cleaned;
+    })
+    .join("\n");
 }
 
 /** Best-effort shell heuristic; direct edit/write events remain authoritative. */

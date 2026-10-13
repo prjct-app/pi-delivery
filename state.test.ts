@@ -15,9 +15,9 @@ import {
 } from "./state.ts";
 
 test("a low-risk delivery passes with fresh evidence", () => {
-  let state = beginDelivery(createDeliveryState(), "Change behavior", ["Tests demonstrate the requested behavior"], "low");
-  state = noteMutation(state, "src/example.ts");
-  state = recordEvidence(state, "C1", "passed", "Targeted test passed", "npm test", "1 passed");
+  const begun = beginDelivery(createDeliveryState(), "Change behavior", ["Tests demonstrate the requested behavior"], "low");
+  const mutated = noteMutation(begun, "src/example.ts");
+  const state = recordEvidence(mutated, "C1", "passed", "Targeted test passed", "npm test", "1 passed");
   const completed = completeDelivery(state);
   assert.equal(completed.assessment.passed, true);
   assert.equal(completed.state.completed, true);
@@ -25,67 +25,65 @@ test("a low-risk delivery passes with fresh evidence", () => {
 });
 
 test("pending and failed criteria block completion", () => {
-  let pending = beginDelivery(createDeliveryState(), "Implement feature", ["Feature works"], "low");
+  const pending = beginDelivery(createDeliveryState(), "Implement feature", ["Feature works"], "low");
   assert.match(assessCompletion(pending).blockers.join("\n"), /C1 is pending/);
 
-  pending = recordEvidence(pending, "C1", "failed", "Regression test failed");
-  assert.match(assessCompletion(pending).blockers.join("\n"), /C1 failed/);
+  const failed = recordEvidence(pending, "C1", "failed", "Regression test failed");
+  assert.match(assessCompletion(failed).blockers.join("\n"), /C1 failed/);
 });
 
 test("a mutation makes earlier evidence and review stale", () => {
-  let state = beginDelivery(createDeliveryState(), "Refactor safely", ["Tests pass"], "medium");
-  state = recordEvidence(state, "C1", "passed", "Tests passed before edit");
-  state = recordReview(state, "passed", "Sanna", "Reviewer found no issues");
-  state = noteMutation(state, "src/refactor.ts");
+  const begun = beginDelivery(createDeliveryState(), "Refactor safely", ["Tests pass"], "medium");
+  const evidenced = recordEvidence(begun, "C1", "passed", "Tests passed before edit");
+  const reviewed = recordReview(evidenced, "passed", "Sanna", "Reviewer found no issues");
+  const state = noteMutation(reviewed, "src/refactor.ts");
   const blockers = assessCompletion(state).blockers.join("\n");
   assert.match(blockers, /C1 has no evidence after mutation revision 1/);
   assert.match(blockers, /Review predates mutation revision 1/);
 });
 
 test("medium and high risk require review, and any failed review blocks", () => {
-  let state = beginDelivery(createDeliveryState(), "Change public API", ["Compatibility verified"], "medium");
-  state = recordEvidence(state, "C1", "passed", "Compatibility suite passed");
+  const begun = beginDelivery(createDeliveryState(), "Change public API", ["Compatibility verified"], "medium");
+  const state = recordEvidence(begun, "C1", "passed", "Compatibility suite passed");
   assert.match(assessCompletion(state).blockers.join("\n"), /requires an independent review/);
   assert.throws(
     () => recordReview(state, "passed", undefined, "Independent reviewer approved the change"),
     /requires a reviewer identifier/,
   );
 
-  state = recordReview(state, "passed", "Sanna", "Independent reviewer approved the change");
-  assert.equal(assessCompletion(state).passed, true);
+  const approved = recordReview(state, "passed", "Sanna", "Independent reviewer approved the change");
+  assert.equal(assessCompletion(approved).passed, true);
 
-  let low = beginDelivery(createDeliveryState(), "Small change", ["Targeted test passes"], "low");
-  low = recordEvidence(low, "C1", "passed", "Targeted test passed");
-  low = recordReview(low, "failed", "Ezra", "Reviewer found a regression");
+  const lowBegun = beginDelivery(createDeliveryState(), "Small change", ["Targeted test passes"], "low");
+  const low = recordReview(recordEvidence(lowBegun, "C1", "passed", "Targeted test passed"), "failed", "Ezra", "Reviewer found a regression");
   assert.match(assessCompletion(low).blockers.join("\n"), /Independent review failed/);
 });
 
 test("unavailable review needs a rationale and cannot satisfy high-risk work", () => {
-  let medium = beginDelivery(createDeliveryState(), "Investigate incident", ["Evidence is documented"], "medium");
-  medium = recordEvidence(medium, "C1", "passed", "Evidence log is complete");
+  const mediumBegun = beginDelivery(createDeliveryState(), "Investigate incident", ["Evidence is documented"], "medium");
+  const medium = recordEvidence(mediumBegun, "C1", "passed", "Evidence log is complete");
   assert.throws(() => recordReview(medium, "unavailable"), /requires a rationale/);
-  medium = recordReview(medium, "unavailable", undefined, undefined, "No independent reviewer is configured in this environment");
-  assert.equal(assessCompletion(medium).passed, true);
+  const mediumReviewed = recordReview(medium, "unavailable", undefined, undefined, "No independent reviewer is configured in this environment");
+  assert.equal(assessCompletion(mediumReviewed).passed, true);
 
-  let high = beginDelivery(createDeliveryState(), "Apply production migration", ["Migration is verified"], "high");
-  high = recordEvidence(high, "C1", "passed", "Migration suite passed");
-  high = recordReview(high, "unavailable", undefined, undefined, "No reviewer is configured");
+  const highBegun = beginDelivery(createDeliveryState(), "Apply production migration", ["Migration is verified"], "high");
+  const highEvidenced = recordEvidence(highBegun, "C1", "passed", "Migration suite passed");
+  const high = recordReview(highEvidenced, "unavailable", undefined, undefined, "No reviewer is configured");
   assert.match(assessCompletion(high).blockers.join("\n"), /requires a completed independent review/);
 });
 
 test("open blocking risks prevent completion", () => {
-  let state = beginDelivery(createDeliveryState(), "Apply migration", ["Migration test passes"], "high");
-  state = recordEvidence(state, "C1", "passed", "Migration test passed");
-  state = recordReview(state, "passed", "Sanna", "Migration reviewed");
-  state = recordRisk(state, {
+  const begun = beginDelivery(createDeliveryState(), "Apply migration", ["Migration test passes"], "high");
+  const reviewed = recordReview(recordEvidence(begun, "C1", "passed", "Migration test passed"), "passed", "Sanna", "Migration reviewed");
+  const risky = recordRisk(reviewed, {
     description: "Rollback has not been tested",
     level: "high",
     status: "open",
     blocking: true,
   });
-  assert.match(assessCompletion(state).blockers.join("\n"), /unresolved blocking risk/);
+  assert.match(assessCompletion(risky).blockers.join("\n"), /unresolved blocking risk/);
 
-  state = recordRisk(state, {
+  const accepted = recordRisk(risky, {
     id: "R1",
     description: "Rollback has not been tested",
     level: "high",
@@ -93,26 +91,24 @@ test("open blocking risks prevent completion", () => {
     blocking: true,
     rationale: "User explicitly accepted the rollout risk",
   });
-  assert.match(assessCompletion(state).blockers.join("\n"), /Review predates contract revision/);
-  state = recordReview(state, "passed", "Ezra", "Reviewer approved the accepted rollback risk");
-  assert.equal(assessCompletion(state).passed, true);
+  assert.match(assessCompletion(accepted).blockers.join("\n"), /Review predates contract revision/);
+  const finalState = recordReview(accepted, "passed", "Ezra", "Reviewer approved the accepted rollback risk");
+  assert.equal(assessCompletion(finalState).passed, true);
 });
 
 test("automatic mutation stays inactive but is retained if delivery begins later", () => {
-  let state = noteMutation(createDeliveryState(), "README.md");
-  assert.equal(state.active, false);
-  state = { ...state, reminders: 2 };
-  state = beginDelivery(state, "Update instructions", ["Instructions are accurate"], "low");
+  const noted = noteMutation(createDeliveryState(), "README.md");
+  assert.equal(noted.active, false);
+  const reminded = { ...noted, reminders: 2 };
+  const state = beginDelivery(reminded, "Update instructions", ["Instructions are accurate"], "low");
   assert.equal(state.mutationRevision, 1);
   assert.equal(state.reminders, 2);
   assert.deepEqual(state.mutationPaths, ["README.md"]);
-  state = noteMutation(state, "README.md");
-  assert.equal(state.reminders, 2);
+  assert.equal(noteMutation(state, "README.md").reminders, 2);
 });
 
 test("criterion ids remain stable and increment", () => {
-  let state = beginDelivery(createDeliveryState(), "Task", ["First"], "low");
-  state = addCriterion(state, "Second");
+  const state = addCriterion(beginDelivery(createDeliveryState(), "Task", ["First"], "low"), "Second");
   assert.deepEqual(state.criteria.map((criterion) => criterion.id), ["C1", "C2"]);
 });
 
