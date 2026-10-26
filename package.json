@@ -1,6 +1,6 @@
 {
   "name": "@prjct.app/pi-delivery",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Track delivery criteria, evidence, reviews, and risks before completing substantial Pi tasks.",
   "type": "module",
   "license": "MIT",

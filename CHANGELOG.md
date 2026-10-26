@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3 — 2026-10-26
 
 - Delivery calls and results render as one line: the action with its objective or criterion, then progress, risk and blocker count. Expanding the tool output shows the objective, marked criteria with their latest evidence, risks, review and remaining blockers. The model still receives the full status text.
 - The automatic reminder renders the same way, and `/delivery-status` uses the compact view.
