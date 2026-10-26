@@ -32,9 +32,7 @@
     "state.ts",
     "render.ts",
     "README.md",
-    "LICENSE",
-    "docs/cover.png",
-    "docs/cover-v2.png"
+    "LICENSE"
   ],
   "scripts": {
     "test": "export PI_CODING_AGENT_DIR=\"$(mktemp -d)\" PRJCT_HOME=\"$(mktemp -d)\" && node --import tsx --test --test-concurrency=1 state.test.ts render.test.ts",
