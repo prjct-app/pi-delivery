@@ -35,7 +35,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "export PI_CODING_AGENT_DIR=\"$(mktemp -d)\" PRJCT_HOME=\"$(mktemp -d)\" && node --import tsx --test --test-concurrency=1 state.test.ts render.test.ts",
+    "test": "export PI_CODING_AGENT_DIR=\"$(mktemp -d)\" PRJCT_HOME=\"$(mktemp -d)\" && node --import tsx --test --test-concurrency=1 state.test.ts render.test.ts index.test.ts",
     "check:package": "npm pack --dry-run --ignore-scripts",
     "check": "tsc --noEmit",
     "build:pi": "node scripts/build-pi.mjs",

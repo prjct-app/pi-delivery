@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Delivery actions called from codemode scripts are kept. A nested call's result never reaches the transcript, so evidence, risks, reviews and completion recorded from a script were lost; each change is now appended to the session like `delivery_start` already was.
 - The npm package no longer ships the cover images (1.6 MB → 12.5 kB). The README and Pi gallery load them from GitHub.
 
 ## 0.1.3 — 2026-10-26
