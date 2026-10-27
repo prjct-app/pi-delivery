@@ -335,7 +335,11 @@ export default function deliveryController(pi: ExtensionAPI) {
     renderCall: (args, theme) => renderCallLine(theme, args.action ?? "", callSubject(args, theme)),
     renderResult: (result, options, theme) => renderDeliveryResult(result, options, theme),
     async execute(_toolCallId, params: DeliveryInput, _signal, _onUpdate, ctx: ExtensionContext) {
-      const step = deliveryStep(current(ctx), params);
+      const state = current(ctx);
+      const step = deliveryStep(state, params);
+      // Calls from codemode scripts never reach the transcript as tool results, so the
+      // result's details cannot be the only record of the new state.
+      if (step.state !== state) commit(step.state);
       return {
         content: [{ type: "text" as const, text: step.text }],
         details: { action: params.action, state: step.state, assessment: step.assessment },
