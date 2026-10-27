@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The npm package no longer ships the cover images (1.6 MB → 12.5 kB). The README and Pi gallery load them from GitHub.
+
 ## 0.1.3 — 2026-10-26
 
 - Delivery calls and results render as one line: the action with its objective or criterion, then progress, risk and blocker count. Expanding the tool output shows the objective, marked criteria with their latest evidence, risks, review and remaining blockers. The model still receives the full status text.
